@@ -38,7 +38,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 require('./routes/authRoutes')(app);
-//! require('./routes/appRoutes')(app);
+require('./routes/appRoutes')(app);
 
 // For deployment
 if (process.env.NODE_ENV === 'production') {

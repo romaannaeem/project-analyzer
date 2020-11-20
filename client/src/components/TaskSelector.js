@@ -25,11 +25,11 @@ export default function TaskSelector() {
   );
 
   function handleMenuClick(e) {
-    console.log('click', e);
+    axios.post('/api/trackedTask', { userId: auth._id, taskId: e.key });
   }
 
   useEffect(() => {
-    const fetchClickupTeams = async () => {
+    const fetchTeams = async () => {
       let teamArray = [];
 
       await clickupApi.get(`/team`).then((res) => {
@@ -41,11 +41,11 @@ export default function TaskSelector() {
       setTeams(teamArray);
     };
 
-    fetchClickupTeams();
+    fetchTeams();
   }, []);
 
   useEffect(() => {
-    const fetchClickupTasks = async () => {
+    const fetchTasks = async () => {
       teams.map(async (team) => {
         await clickupApi
           .get(`/team/${team}/task`)
@@ -53,15 +53,15 @@ export default function TaskSelector() {
       });
     };
 
-    fetchClickupTasks();
+    fetchTasks();
   }, [teams]);
 
-  console.log('tasks', tasks);
+  // console.log('tasks', tasks);
 
   return (
     <Dropdown overlay={menu}>
       <Button>
-        Select Task You'd Like To Track <DownOutlined />
+        Track a new Project <DownOutlined />
       </Button>
     </Dropdown>
   );

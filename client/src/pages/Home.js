@@ -4,6 +4,7 @@ import { Redirect } from 'react-router-dom';
 import { Layout, Row, Col, Typography } from 'antd';
 
 import TaskSelector from '../components/TaskSelector';
+import TaskBoard from '../components/TaskBoard';
 
 const { Content } = Layout;
 const { Title } = Typography;
@@ -26,10 +27,12 @@ export default function Home() {
               style={{ padding: 24, minHeight: '80vh' }}
             >
               <Row>
-                <Col className="gutter-row upcoming-events-column" span={4}>
+                <Col className="gutter-row upcoming-events-column">
                   <Title level={4}>Tracked Projects</Title>
-                  <div>Hello {auth.name}</div>
+                  <div>Welcome back, {auth.name}</div>
+                  <br />
                   <TaskSelector />
+                  <TaskBoard />
                 </Col>
               </Row>
             </div>
