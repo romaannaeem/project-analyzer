@@ -63,7 +63,7 @@ export default function TaskBoard() {
         .then((res) => setTeamId(res.data.teams[0].id));
     };
     saveTeamId();
-  }, []);
+  }, [tasks]);
 
   useEffect(() => {
     // Clickup API is bugged for subtasks so we're gonna have to do this the long way
@@ -73,33 +73,54 @@ export default function TaskBoard() {
     //! 4. If theres a match, push to subtasks array inside object
 
     const fetchSubtasks = () => {
-      let trackedTasks = tasks;
-      // console.log('tracked tasks', trackedTasks);
+      let tempDataTable = tableData;
+
+      // console.log('tableData', tempDataTable);
 
       for (let i = 0; i < 5; i++) {
         clickupApi
           .get(`/team/${teamId}/task?page=${i}&subtasks=true`)
           .then((res) => {
             if (res.data.tasks.length != 0) {
-              // console.log(`subtasks for team page ${i}`, res.data.tasks);
-
               // Mapping through all subtasks
               res.data.tasks.map((subtask) => {
                 // Mapping through all tracked tasks
                 tasks.map((trackedTask) => {
-                  console.log('subtask', subtask);
-                  console.log('Task from state', trackedTask);
+                  if (subtask.parent == trackedTask.id) {
+                    // Find table item with same ID as trackedTask
+                    tempDataTable.map((tableItem) => {
+                      if (tableItem.key == trackedTask.id) {
+                        tableItem.subtasks.push(subtask);
+                      }
+                    });
+
+                    // console.log(
+                    //   `Match found! ${subtask.name} is a subtask of ${trackedTask.name}`
+                    // );
+                  }
                 });
               });
             }
           });
       }
+      tempDataTable.map((tempDataItem) => {
+        getUniqueListBy(tempDataItem.subtasks, 'id');
+      });
+
+      setTableData(tempDataTable);
+      // console.log('New table data', tempDataTable);
     };
 
     if (tasks != [] && teamId != '') {
       fetchSubtasks();
     }
-  }, [tasks, teamId]);
+  }, [teamId, tasks]);
+
+  function getUniqueListBy(arr, key) {
+    return [...new Map(arr.map((item) => [item[key], item])).values()];
+  }
+
+  console.log('table data', tableData);
 
   return <Table columns={columns} dataSource={tableData} />;
 }
