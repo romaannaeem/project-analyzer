@@ -10,8 +10,13 @@ export default function TaskBoard() {
   let [subtasks, setSubtasks] = useState([]);
   let [teamId, setTeamId] = useState('');
 
+  // const clickupApi = axios.create({
+  //   baseURL: 'https://cors-duck.herokuapp.com/https://api.clickup.com/api/v2',
+  //   headers: { Authorization: auth.token },
+  // });
+
   const clickupApi = axios.create({
-    baseURL: 'https://cors-duck.herokuapp.com/https://api.clickup.com/api/v2',
+    baseURL: 'https://api.clickup.com/api/v2',
     headers: { Authorization: auth.token },
   });
 
@@ -20,6 +25,11 @@ export default function TaskBoard() {
       title: 'Task Name',
       dataIndex: 'taskName',
       key: 'taskName',
+    },
+    {
+      title: 'Number of Subtasks',
+      dataIndex: 'subTaskCount',
+      key: 'subTaskCount',
     },
     {
       title: 'Total Completion (%)',
@@ -38,23 +48,6 @@ export default function TaskBoard() {
     },
   ];
 
-  useEffect(() => {
-    const fetchTasksById = () => {
-      auth.trackedTasks.map(async (task) => {
-        await clickupApi.get(`/task/${task}`).then((res) => {
-          setTasks((oldArray) => [...oldArray, res.data]);
-
-          setTableData((oldArray) => [
-            ...oldArray,
-            { key: res.data.id, taskName: res.data.name, subtasks: [] },
-          ]);
-        });
-      });
-    };
-
-    fetchTasksById();
-  }, []);
-
   // Sets Team ID
   useEffect(() => {
     const saveTeamId = async () => {
@@ -62,65 +55,138 @@ export default function TaskBoard() {
         .get(`/team`)
         .then((res) => setTeamId(res.data.teams[0].id));
     };
+
     saveTeamId();
   }, [tasks]);
 
+  // Fetch tasks and set initial table data
   useEffect(() => {
-    // Clickup API is bugged for subtasks so we're gonna have to do this the long way
-    //* 1. Get team ID
-    //* 2. Get all subtasks from the team
-    //! 3. Check individual subtasks for matching parent ID to existing tracked task ID
-    //! 4. If theres a match, push to subtasks array inside object
+    const fetchTasksById = () => {
+      auth.trackedTasks.map(async (task) => {
+        await clickupApi.get(`/task/${task}`).then((res) => {
+          setTasks((oldArray) => [...oldArray, res.data]);
+        });
+      });
+    };
 
+    fetchTasksById();
+  }, []);
+
+  // Saves all subtasks into subtask array
+  useEffect(() => {
     const fetchSubtasks = () => {
-      let tempDataTable = tableData;
-
-      // console.log('tableData', tempDataTable);
-
       for (let i = 0; i < 5; i++) {
         clickupApi
-          .get(`/team/${teamId}/task?page=${i}&subtasks=true`)
+          .get(
+            `/team/${teamId}/task?page=${i}&subtasks=true&include_closed=true`
+          )
           .then((res) => {
-            if (res.data.tasks.length != 0) {
-              // Mapping through all subtasks
-              res.data.tasks.map((subtask) => {
-                // Mapping through all tracked tasks
-                tasks.map((trackedTask) => {
-                  if (subtask.parent == trackedTask.id) {
-                    // Find table item with same ID as trackedTask
-                    tempDataTable.map((tableItem) => {
-                      if (tableItem.key == trackedTask.id) {
-                        tableItem.subtasks.push(subtask);
-                      }
-                    });
-
-                    // console.log(
-                    //   `Match found! ${subtask.name} is a subtask of ${trackedTask.name}`
-                    // );
-                  }
-                });
-              });
-            }
+            res.data.tasks.map((subtask) => {
+              if (subtask.parent != null) {
+                setSubtasks((oldArray) => [...oldArray, subtask]);
+              }
+            });
           });
       }
-      tempDataTable.map((tempDataItem) => {
-        getUniqueListBy(tempDataItem.subtasks, 'id');
-      });
-
-      setTableData(tempDataTable);
-      // console.log('New table data', tempDataTable);
     };
 
     if (tasks != [] && teamId != '') {
       fetchSubtasks();
     }
-  }, [teamId, tasks]);
+  }, [teamId]);
+
+  // Constructs the table data
+  useEffect(() => {
+    const constructTableData = () => {
+      let tempTableData = [];
+
+      tasks.map((task) => {
+        tempTableData.push({ key: task.id, taskName: task.name, subtasks: [] });
+      });
+
+      subtasks.map((subtask) => {
+        tempTableData.map((tableItem) => {
+          if (tableItem.key == subtask.parent) {
+            tableItem.subtasks.push(subtask);
+          }
+        });
+      });
+
+      tempTableData.map((tableItem) => {
+        let openSubtasks = 0;
+        let closedSubtasks = 0;
+        tableItem.subTaskCount = tableItem.subtasks.length;
+
+        tableItem.subtasks.map((subtask) => {
+          if (subtask.status.type == 'open') openSubtasks++;
+          if (subtask.status.type == 'closed') closedSubtasks++;
+        });
+
+        tableItem.totalCompletion = closedSubtasks / openSubtasks;
+      });
+
+      setTableData(tempTableData);
+    };
+
+    if (tasks != [] && subtasks != []) {
+      constructTableData();
+    }
+  }, [tasks, subtasks]);
+
+  // TODO - 1. Check individual subtasks for matching parent ID to existing tracked task ID
+  // TODO - 2. If theres a match, push to subtasks array inside object
+  // ? How do we know the table data is up to date?
+
+  // useEffect(() => {
+  //   // Clickup API is bugged for subtasks so we're gonna have to do this the long way
+  //   const fetchSubtasks = () => {
+  //     let tempDataTable = tableData;
+  //     // console.log('tableData', tempDataTable);
+  //     for (let i = 0; i < 5; i++) {
+  //       clickupApi
+  //         .get(`/team/${teamId}/task?page=${i}&subtasks=true`)
+  //         .then((res) => {
+  //           if (res.data.tasks.length != 0) {
+  //             // Mapping through all subtasks
+  //             res.data.tasks.map((subtask) => {
+  //               // Mapping through all tracked tasks
+  //               tasks.map((trackedTask) => {
+  //                 if (subtask.parent == trackedTask.id) {
+  //                   // Find table item with same ID as trackedTask
+  //                   setTableData(data.map)
+  //                   tableData.map((tableItem) => {
+  //                     if (tableItem.key == trackedTask.id) {
+  //                       // let tempTableItem = tableItem;
+  //                       // tempTableItem.subtasks.push(subtask);
+  //                     }
+  //                   });
+  //                   // console.log(
+  //                   //   `Match found! ${subtask.name} is a subtask of ${trackedTask.name}`
+  //                   // );
+  //                 }
+  //               });
+  //             });
+  //           }
+  //         });
+  //     }
+  //     // tempDataTable.map((tempDataItem) => {
+  //     //   getUniqueListBy(tempDataItem.subtasks, 'id');
+  //     // });
+  //     console.log('data table', tableData);
+  //     // setTableData(tempDataTable);
+  //     // console.log('New table data', tempDataTable);
+  //   };
+  //   if (tasks != [] && teamId != '') {
+  //     fetchSubtasks();
+  //   }
+  // }, [teamId, tasks]);
+
+  console.log('tableData', tableData);
+  // console.log('subtasks', subtasks);
 
   function getUniqueListBy(arr, key) {
     return [...new Map(arr.map((item) => [item[key], item])).values()];
   }
-
-  console.log('table data', tableData);
 
   return <Table columns={columns} dataSource={tableData} />;
 }
