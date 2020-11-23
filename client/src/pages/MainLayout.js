@@ -47,7 +47,7 @@ export default function MainLayout(props) {
 
               {props.children}
               <Footer style={{ textAlign: 'center' }}>
-                Ant Design ©2018 Created by Ant UED
+                Lol Corp. ©2020 Created by R.N
               </Footer>
             </Layout>
           </Layout>

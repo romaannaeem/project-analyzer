@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { Table } from 'antd';
+import moment from 'moment';
 
 export default function TaskBoard() {
   let auth = useSelector((state) => state.auth);
@@ -10,15 +11,15 @@ export default function TaskBoard() {
   let [subtasks, setSubtasks] = useState([]);
   let [teamId, setTeamId] = useState('');
 
-  // const clickupApi = axios.create({
-  //   baseURL: 'https://cors-duck.herokuapp.com/https://api.clickup.com/api/v2',
-  //   headers: { Authorization: auth.token },
-  // });
-
   const clickupApi = axios.create({
-    baseURL: 'https://api.clickup.com/api/v2',
+    baseURL: 'https://cors-duck.herokuapp.com/https://api.clickup.com/api/v2',
     headers: { Authorization: auth.token },
   });
+
+  // const clickupApi = axios.create({
+  //   baseURL: 'https://api.clickup.com/api/v2',
+  //   headers: { Authorization: auth.token },
+  // });
 
   const columns = [
     {
@@ -101,7 +102,12 @@ export default function TaskBoard() {
       let tempTableData = [];
 
       tasks.map((task) => {
-        tempTableData.push({ key: task.id, taskName: task.name, subtasks: [] });
+        tempTableData.push({
+          key: task.id,
+          taskName: task.name,
+          subtasks: [],
+          projectStartDate: task.date_created,
+        });
       });
 
       subtasks.map((subtask) => {
@@ -133,56 +139,38 @@ export default function TaskBoard() {
     }
   }, [tasks, subtasks]);
 
-  // TODO - 1. Check individual subtasks for matching parent ID to existing tracked task ID
-  // TODO - 2. If theres a match, push to subtasks array inside object
-  // ? How do we know the table data is up to date?
+  useEffect(() => {
+    const doSomething = () => {
+      tableData.map((tableItem) => {
+        calculateAverageDailyCompletion(tableItem);
+      });
+    };
 
-  // useEffect(() => {
-  //   // Clickup API is bugged for subtasks so we're gonna have to do this the long way
-  //   const fetchSubtasks = () => {
-  //     let tempDataTable = tableData;
-  //     // console.log('tableData', tempDataTable);
-  //     for (let i = 0; i < 5; i++) {
-  //       clickupApi
-  //         .get(`/team/${teamId}/task?page=${i}&subtasks=true`)
-  //         .then((res) => {
-  //           if (res.data.tasks.length != 0) {
-  //             // Mapping through all subtasks
-  //             res.data.tasks.map((subtask) => {
-  //               // Mapping through all tracked tasks
-  //               tasks.map((trackedTask) => {
-  //                 if (subtask.parent == trackedTask.id) {
-  //                   // Find table item with same ID as trackedTask
-  //                   setTableData(data.map)
-  //                   tableData.map((tableItem) => {
-  //                     if (tableItem.key == trackedTask.id) {
-  //                       // let tempTableItem = tableItem;
-  //                       // tempTableItem.subtasks.push(subtask);
-  //                     }
-  //                   });
-  //                   // console.log(
-  //                   //   `Match found! ${subtask.name} is a subtask of ${trackedTask.name}`
-  //                   // );
-  //                 }
-  //               });
-  //             });
-  //           }
-  //         });
-  //     }
-  //     // tempDataTable.map((tempDataItem) => {
-  //     //   getUniqueListBy(tempDataItem.subtasks, 'id');
-  //     // });
-  //     console.log('data table', tableData);
-  //     // setTableData(tempDataTable);
-  //     // console.log('New table data', tempDataTable);
-  //   };
-  //   if (tasks != [] && teamId != '') {
-  //     fetchSubtasks();
-  //   }
-  // }, [teamId, tasks]);
+    doSomething();
+  }, [tableData]);
 
-  console.log('tableData', tableData);
-  // console.log('subtasks', subtasks);
+  function convertUnixTime(timestamp) {
+    let date = new Date(parseInt(timestamp));
+    let year = date.getFullYear();
+    let month = (date.getMonth() + 1).toString().padStart(2, '0');
+    let day = date.getDate().toString().padStart(2, '0');
+
+    let formattedTime = `${day}/${month}/${year}`;
+
+    return formattedTime;
+  }
+
+  function calculateAverageDailyCompletion(project) {
+    // * : 1. Start from day top level task was created
+    // TODO: 2. For each day until today, how many tasks were completed?
+    // TODO: 3. Divide each day from total & get daily completion rate
+    // TODO: 4. With list of %'s, find the average daily percentage
+
+    console.log(
+      project.projectStartDate,
+      convertUnixTime(project.projectStartDate)
+    );
+  }
 
   function getUniqueListBy(arr, key) {
     return [...new Map(arr.map((item) => [item[key], item])).values()];

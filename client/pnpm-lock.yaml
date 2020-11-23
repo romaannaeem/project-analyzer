@@ -6,6 +6,7 @@ dependencies:
   antd: 4.8.4_react-dom@17.0.1+react@17.0.1
   axios: 0.21.0
   http-proxy-middleware: 1.0.6
+  moment: 2.29.1
   react: 17.0.1
   react-dom: 17.0.1_react@17.0.1
   react-redux: 7.2.2_380dc38591053d98779d1f25fc7202b9
@@ -13322,6 +13323,7 @@ specifiers:
   antd: ^4.8.4
   axios: ^0.21.0
   http-proxy-middleware: ^1.0.6
+  moment: ^2.29.1
   react: ^17.0.1
   react-dom: ^17.0.1
   react-redux: ^7.2.2
