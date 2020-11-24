@@ -14,8 +14,6 @@ export default function TaskBoard() {
   let [subtasks, setSubtasks] = useState([]);
   let [teamId, setTeamId] = useState('');
 
-  const ONE_DAY = 86400000;
-
   const clickupApi = axios.create({
     baseURL: 'https://cors-duck.herokuapp.com/https://api.clickup.com/api/v2',
     headers: { Authorization: auth.token },

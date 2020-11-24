@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Spin, Menu, Layout } from 'antd';
 import { Redirect } from 'react-router-dom';
 import { BuildOutlined } from '@ant-design/icons';
