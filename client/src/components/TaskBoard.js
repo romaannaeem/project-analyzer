@@ -131,6 +131,10 @@ export default function TaskBoard() {
         });
 
         tableItem.totalCompletion = closedSubtasks / openSubtasks;
+
+        tableItem.averageDailyCompletion = calculateAverageDailyCompletion(
+          tableItem
+        );
       });
 
       setTableData(tempTableData);
@@ -151,24 +155,6 @@ export default function TaskBoard() {
     doSomething();
   }, [tableData]);
 
-  function calculateAverageDailyCompletion(project) {
-    // * : 1. Find difference in # of days from task create date and today
-    // * : 2. Create array of # length, seeded with all 0's
-    // TODO: Increment days from 2 dates
-
-    let now = Date.now();
-    let daysAgo = daysBetween(project.projectStartDate, now);
-    let completionArray = new Array(daysAgo + 1).fill(0);
-
-    let arr = fillCompletionArray(
-      completionArray,
-      project,
-      project.projectStartDate
-    );
-
-    console.log(`for ${project.taskName}: ${arr}`);
-  }
-
   function convertUnixTime(timestamp) {
     let date = new Date(parseInt(timestamp));
     let year = date.getFullYear();
@@ -182,9 +168,6 @@ export default function TaskBoard() {
 
   // Takes (Array, Object, Number(Unix Time in ms))
   function fillCompletionArray(array, project, firstDay) {
-    // * : Increment from firstDay to array.length days
-    // TODO: For each day incremented, loop through all subtasks
-
     let startDate = parseInt(firstDay, 10); // coerce to number
     let counter = 0;
 
@@ -213,6 +196,34 @@ export default function TaskBoard() {
     let differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
 
     return differenceInDays;
+  }
+
+  function arrayOfAverages(arr, toDivideBy) {
+    return arr.map((num) => num / toDivideBy);
+  }
+
+  function findAverage(arr) {
+    let total = 0;
+    arr.map((num) => (total += num));
+    let average = total / arr.length;
+    return average;
+  }
+
+  function calculateAverageDailyCompletion(project) {
+    let now = Date.now();
+    let daysAgo = daysBetween(project.projectStartDate, now);
+    let completionArray = new Array(daysAgo + 1).fill(0);
+
+    let arr = fillCompletionArray(
+      completionArray,
+      project,
+      project.projectStartDate
+    );
+
+    let averagedArray = arrayOfAverages(arr, project.subtasks.length);
+    let averageDailyCompletionRate = findAverage(averagedArray);
+
+    return averageDailyCompletionRate;
   }
 
   function getUniqueListBy(arr, key) {
