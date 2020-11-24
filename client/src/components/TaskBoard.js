@@ -38,11 +38,13 @@ export default function TaskBoard() {
       title: 'Total Completion (%)',
       dataIndex: 'totalCompletion',
       key: 'totalCompletion',
+      render: (item) => (item * 100).toFixed(2),
     },
     {
       title: 'Average Daily Completion (%)',
       dataIndex: 'averageDailyCompletion',
       key: 'averageDailyCompletion',
+      render: (item) => (item * 100).toFixed(2),
     },
     {
       title: 'Projected End Date',
