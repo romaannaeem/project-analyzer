@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { Table } from 'antd';
-import moment from 'moment';
+import {
+  calculateAverageDailyCompletion,
+  findProjectedEndDate,
+} from '../utils';
 
 export default function TaskBoard() {
   let auth = useSelector((state) => state.auth);
@@ -10,8 +13,6 @@ export default function TaskBoard() {
   let [tableData, setTableData] = useState([]);
   let [subtasks, setSubtasks] = useState([]);
   let [teamId, setTeamId] = useState('');
-
-  const ONE_DAY = 86400000;
 
   const clickupApi = axios.create({
     baseURL: 'https://cors-duck.herokuapp.com/https://api.clickup.com/api/v2',
@@ -38,18 +39,24 @@ export default function TaskBoard() {
       title: 'Total Completion (%)',
       dataIndex: 'totalCompletion',
       key: 'totalCompletion',
-      render: (item) => (item * 100).toFixed(2),
     },
     {
       title: 'Average Daily Completion (%)',
       dataIndex: 'averageDailyCompletion',
       key: 'averageDailyCompletion',
-      render: (item) => (item * 100).toFixed(2),
     },
     {
       title: 'Projected End Date',
       dataIndex: 'projectedEndDate',
       key: 'projectedEndDate',
+      render: (text, record, index) => (
+        <>
+          {findProjectedEndDate(
+            record.totalCompletion,
+            record.averageDailyCompletion
+          )}
+        </>
+      ),
     },
   ];
 
@@ -132,11 +139,34 @@ export default function TaskBoard() {
           if (subtask.status.type == 'closed') closedSubtasks++;
         });
 
-        tableItem.totalCompletion = closedSubtasks / openSubtasks;
+        tableItem.totalCompletion = (
+          (closedSubtasks / openSubtasks) *
+          100
+        ).toFixed(2);
 
-        tableItem.averageDailyCompletion = calculateAverageDailyCompletion(
-          tableItem
-        );
+        tableItem.averageDailyCompletion = (
+          calculateAverageDailyCompletion(tableItem) * 100
+        ).toFixed(2);
+
+        if (tableItem.averageDailyCompletion == 0.0) {
+          tableItem.projectedEndDate = 'N/A';
+        } else {
+          // console.log(
+          //   `${tableItem.taskName} total completion:`,
+          //   tableItem.totalCompletion
+          // );
+          // console.log(
+          //   `${tableItem.taskName} average daily completion:`,
+          //   tableItem.averageDailyCompletion
+          // );
+          // console.log(
+          //   `${tableItem.taskName} end date:` +
+          //     findProjectedEndDate(
+          //       tableItem.totalCompletion,
+          //       tableItem.averageDailyCompletion
+          //     )
+          // );
+        }
       });
 
       setTableData(tempTableData);
@@ -146,91 +176,6 @@ export default function TaskBoard() {
       constructTableData();
     }
   }, [tasks, subtasks]);
-
-  useEffect(() => {
-    const doSomething = () => {
-      tableData.map((tableItem) => {
-        calculateAverageDailyCompletion(tableItem);
-      });
-    };
-
-    doSomething();
-  }, [tableData]);
-
-  function convertUnixTime(timestamp) {
-    let date = new Date(parseInt(timestamp));
-    let year = date.getFullYear();
-    let month = (date.getMonth() + 1).toString().padStart(2, '0');
-    let day = date.getDate().toString().padStart(2, '0');
-
-    let formattedTime = `${day}/${month}/${year}`;
-
-    return formattedTime;
-  }
-
-  // Takes (Array, Object, Number(Unix Time in ms))
-  function fillCompletionArray(array, project, firstDay) {
-    let startDate = parseInt(firstDay, 10); // coerce to number
-    let counter = 0;
-
-    for (
-      let i = startDate;
-      i <= startDate + ONE_DAY * array.length;
-      i = i + ONE_DAY
-    ) {
-      project.subtasks.map((subtask) => {
-        if (convertUnixTime(i) == convertUnixTime(subtask.date_closed)) {
-          array[counter]++;
-        }
-      });
-      counter++;
-    }
-
-    return array;
-  }
-
-  // If strings passed, they'll be coerced to numbers
-  function daysBetween(d1, d2) {
-    let date1 = new Date(parseInt(d1, 10)); // Earlier date
-    let date2 = new Date(parseInt(d2, 10)); // Later date
-
-    let differenceInTime = date2.getTime() - date1.getTime();
-    let differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
-
-    return differenceInDays;
-  }
-
-  function arrayOfAverages(arr, toDivideBy) {
-    return arr.map((num) => num / toDivideBy);
-  }
-
-  function findAverage(arr) {
-    let total = 0;
-    arr.map((num) => (total += num));
-    let average = total / arr.length;
-    return average;
-  }
-
-  function calculateAverageDailyCompletion(project) {
-    let now = Date.now();
-    let daysAgo = daysBetween(project.projectStartDate, now);
-    let completionArray = new Array(daysAgo + 1).fill(0);
-
-    let arr = fillCompletionArray(
-      completionArray,
-      project,
-      project.projectStartDate
-    );
-
-    let averagedArray = arrayOfAverages(arr, project.subtasks.length);
-    let averageDailyCompletionRate = findAverage(averagedArray);
-
-    return averageDailyCompletionRate;
-  }
-
-  function getUniqueListBy(arr, key) {
-    return [...new Map(arr.map((item) => [item[key], item])).values()];
-  }
 
   return <Table columns={columns} dataSource={tableData} />;
 }
