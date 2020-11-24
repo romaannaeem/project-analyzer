@@ -11,6 +11,8 @@ export default function TaskBoard() {
   let [subtasks, setSubtasks] = useState([]);
   let [teamId, setTeamId] = useState('');
 
+  const ONE_DAY = 86400000;
+
   const clickupApi = axios.create({
     baseURL: 'https://cors-duck.herokuapp.com/https://api.clickup.com/api/v2',
     headers: { Authorization: auth.token },
@@ -149,6 +151,24 @@ export default function TaskBoard() {
     doSomething();
   }, [tableData]);
 
+  function calculateAverageDailyCompletion(project) {
+    // * : 1. Find difference in # of days from task create date and today
+    // * : 2. Create array of # length, seeded with all 0's
+    // TODO: Increment days from 2 dates
+
+    let now = Date.now();
+    let daysAgo = daysBetween(project.projectStartDate, now);
+    let completionArray = new Array(daysAgo + 1).fill(0);
+
+    let arr = fillCompletionArray(
+      completionArray,
+      project,
+      project.projectStartDate
+    );
+
+    console.log(`for ${project.taskName}: ${arr}`);
+  }
+
   function convertUnixTime(timestamp) {
     let date = new Date(parseInt(timestamp));
     let year = date.getFullYear();
@@ -160,16 +180,39 @@ export default function TaskBoard() {
     return formattedTime;
   }
 
-  function calculateAverageDailyCompletion(project) {
-    // * : 1. Start from day top level task was created
-    // TODO: 2. For each day until today, how many tasks were completed?
-    // TODO: 3. Divide each day from total & get daily completion rate
-    // TODO: 4. With list of %'s, find the average daily percentage
+  // Takes (Array, Object, Number(Unix Time in ms))
+  function fillCompletionArray(array, project, firstDay) {
+    // * : Increment from firstDay to array.length days
+    // TODO: For each day incremented, loop through all subtasks
 
-    console.log(
-      project.projectStartDate,
-      convertUnixTime(project.projectStartDate)
-    );
+    let startDate = parseInt(firstDay, 10); // coerce to number
+    let counter = 0;
+
+    for (
+      let i = startDate;
+      i <= startDate + ONE_DAY * array.length;
+      i = i + ONE_DAY
+    ) {
+      project.subtasks.map((subtask) => {
+        if (convertUnixTime(i) == convertUnixTime(subtask.date_closed)) {
+          array[counter]++;
+        }
+      });
+      counter++;
+    }
+
+    return array;
+  }
+
+  // If strings passed, they'll be coerced to numbers
+  function daysBetween(d1, d2) {
+    let date1 = new Date(parseInt(d1, 10)); // Earlier date
+    let date2 = new Date(parseInt(d2, 10)); // Later date
+
+    let differenceInTime = date2.getTime() - date1.getTime();
+    let differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
+
+    return differenceInDays;
   }
 
   function getUniqueListBy(arr, key) {
