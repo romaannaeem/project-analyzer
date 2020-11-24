@@ -14,6 +14,8 @@ export default function TaskBoard() {
   let [subtasks, setSubtasks] = useState([]);
   let [teamId, setTeamId] = useState('');
 
+  const ONE_DAY = 86400000;
+
   const clickupApi = axios.create({
     baseURL: 'https://cors-duck.herokuapp.com/https://api.clickup.com/api/v2',
     headers: { Authorization: auth.token },
@@ -49,14 +51,6 @@ export default function TaskBoard() {
       title: 'Projected End Date',
       dataIndex: 'projectedEndDate',
       key: 'projectedEndDate',
-      render: (text, record, index) => (
-        <>
-          {findProjectedEndDate(
-            record.totalCompletion,
-            record.averageDailyCompletion
-          )}
-        </>
-      ),
     },
   ];
 
@@ -151,21 +145,10 @@ export default function TaskBoard() {
         if (tableItem.averageDailyCompletion == 0.0) {
           tableItem.projectedEndDate = 'N/A';
         } else {
-          // console.log(
-          //   `${tableItem.taskName} total completion:`,
-          //   tableItem.totalCompletion
-          // );
-          // console.log(
-          //   `${tableItem.taskName} average daily completion:`,
-          //   tableItem.averageDailyCompletion
-          // );
-          // console.log(
-          //   `${tableItem.taskName} end date:` +
-          //     findProjectedEndDate(
-          //       tableItem.totalCompletion,
-          //       tableItem.averageDailyCompletion
-          //     )
-          // );
+          tableItem.projectedEndDate = findProjectedEndDate(
+            tableItem.totalCompletion,
+            tableItem.averageDailyCompletion
+          );
         }
       });
 

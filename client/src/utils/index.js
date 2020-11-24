@@ -24,15 +24,14 @@ export function findProjectedEndDate(
   let today = Date.now();
   let days = 0;
 
-  for (let i = totalCompletionRate; i <= 100; i += averageDailyCompletionRate) {
+  let completionRate = Number(totalCompletionRate);
+  let avgDaily = Number(averageDailyCompletionRate);
+
+  for (let i = completionRate; i <= 100; i += avgDaily) {
     days++;
   }
 
   let projectedEndDate = convertUnixTime(today + ONE_DAY * days);
-
-  console.log(
-    `projected end date ${projectedEndDate} for ${totalCompletionRate} with a daily increment of ${averageDailyCompletionRate}`
-  );
 
   return projectedEndDate;
 }
