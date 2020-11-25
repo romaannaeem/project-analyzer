@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { Table } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
 import {
   calculateAverageDailyCompletion,
   findProjectedEndDate,
@@ -49,6 +50,18 @@ export default function TaskBoard() {
       title: 'Projected End Date',
       dataIndex: 'projectedEndDate',
       key: 'projectedEndDate',
+    },
+    {
+      title: 'Delete Project',
+      dataIndex: 'deleteProject',
+      key: 'deleteProject',
+      render: (text, record, index) => {
+        return (
+          <div onClick={() => deleteTask(record.key)}>
+            <DeleteOutlined className="delete-project-icon" />
+          </div>
+        );
+      },
     },
   ];
 
@@ -157,6 +170,21 @@ export default function TaskBoard() {
       constructTableData();
     }
   }, [tasks, subtasks]);
+
+  function deleteTask(taskId, userId = auth._id) {
+    // let tempTableData = tableData;
+
+    // for (let i = 0; i < tempTableData.length; i++) {
+    //   if (taskId == tempTableData[i].key) {
+    //     tempTableData.splice(i, 1);
+    //   }
+    // }
+
+    // setTableData(tempTableData);
+
+    axios.delete(`/api/trackedTask/${taskId}`, { params: { userId } });
+    window.location.href = `/`;
+  }
 
   return <Table columns={columns} dataSource={tableData} />;
 }

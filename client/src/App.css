@@ -6,6 +6,10 @@
   margin: 16px;
 }
 
+.delete-project-icon {
+  cursor: pointer;
+}
+
 .site-layout-sub-header-background {
   background: #fff;
 }
