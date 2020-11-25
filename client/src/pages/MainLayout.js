@@ -1,7 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Spin, Menu, Layout } from 'antd';
-import { Redirect } from 'react-router-dom';
 import {
   BuildOutlined,
   LogoutOutlined,
@@ -9,7 +8,6 @@ import {
   GithubOutlined,
 } from '@ant-design/icons';
 import { logoutUser } from '../actions/index';
-import { baseServerURL } from '../config/keys';
 
 const { Header, Footer, Sider } = Layout;
 

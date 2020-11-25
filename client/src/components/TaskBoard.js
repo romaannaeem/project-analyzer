@@ -58,7 +58,10 @@ export default function TaskBoard() {
       render: (text, record, index) => {
         return (
           <div onClick={() => deleteTask(record.key)}>
-            <DeleteOutlined className="delete-project-icon" />
+            <DeleteOutlined
+              style={{ fontSize: '1.25rem' }}
+              className="delete-project-icon"
+            />
           </div>
         );
       },

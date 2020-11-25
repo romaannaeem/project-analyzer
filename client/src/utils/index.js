@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 const ONE_DAY = 86400000;
 
 export function calculateAverageDailyCompletion(project) {
