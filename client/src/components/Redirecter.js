@@ -10,7 +10,7 @@ class HeaderBar extends Component {
       case null:
         return;
       case false: {
-        window.location.href = `${baseServerURL}/api/auth/clickup`;
+        window.location.href = `/api/auth/clickup`;
         return null;
       }
       default:

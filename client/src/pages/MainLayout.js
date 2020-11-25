@@ -15,7 +15,7 @@ export default function MainLayout(props) {
       case null:
         return <Spin />;
       case false: {
-        window.location.href = `${baseServerURL}/api/auth/clickup`;
+        window.location.href = `/api/auth/clickup`;
         return null;
       }
 
