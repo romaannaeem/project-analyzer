@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Spin, Menu, Layout } from 'antd';
 import { Redirect } from 'react-router-dom';
 import { BuildOutlined } from '@ant-design/icons';
+import { baseServerURL } from '../config/keys';
 
 const { Header, Footer, Sider } = Layout;
 
@@ -13,8 +14,11 @@ export default function MainLayout(props) {
     switch (auth) {
       case null:
         return <Spin />;
-      case false:
-        return <Redirect to="/api/auth/clickup" />;
+      case false: {
+        window.location.href = `${baseServerURL}/api/auth/clickup`;
+        return null;
+      }
+
       default:
         return (
           <Layout>

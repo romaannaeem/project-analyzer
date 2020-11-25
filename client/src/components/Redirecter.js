@@ -2,14 +2,17 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as actions from '../actions';
 import { Link, Redirect } from 'react-router-dom';
+import { baseServerURL } from '../config/keys';
 
 class HeaderBar extends Component {
   renderContent = () => {
     switch (this.props.auth) {
       case null:
         return;
-      case false:
-        return <Redirect to="/api/auth/clickup" />;
+      case false: {
+        window.location.href = `${baseServerURL}/api/auth/clickup`;
+        return null;
+      }
       default:
         return <></>;
     }
