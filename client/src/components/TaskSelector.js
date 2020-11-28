@@ -16,11 +16,13 @@ export default function TaskSelector() {
 
   const menu = (
     <Menu onClick={handleMenuClick}>
-      {tasks.map((task) => (
-        <Menu.Item key={task.id} icon={<InfoCircleOutlined />}>
-          {task.name}
-        </Menu.Item>
-      ))}
+      {tasks.map((task) => {
+        return (
+          <Menu.Item key={task.id} icon={<InfoCircleOutlined />}>
+            {task.name}
+          </Menu.Item>
+        );
+      })}
     </Menu>
   );
 
@@ -47,9 +49,9 @@ export default function TaskSelector() {
   useEffect(() => {
     const fetchTasks = async () => {
       teams.map(async (team) => {
-        await clickupApi
-          .get(`/team/${team}/task`)
-          .then((res) => setTasks(res.data.tasks));
+        await clickupApi.get(`/team/${team}/task`).then((res) => {
+          setTasks(res.data.tasks);
+        });
       });
     };
 

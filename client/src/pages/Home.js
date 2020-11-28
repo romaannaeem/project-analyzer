@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Redirect } from 'react-router-dom';
 import { Layout, Row, Col, Typography } from 'antd';
 
+import TaskSearch from '../components/TaskSearch';
 import TaskSelector from '../components/TaskSelector';
 import TaskBoard from '../components/TaskBoard';
 
@@ -13,7 +14,6 @@ export default function Home() {
   const auth = useSelector((state) => state.auth);
 
   const renderContent = () => {
-    console.log(auth);
     switch (auth) {
       case null:
         return <>Loading...</>;
@@ -31,7 +31,9 @@ export default function Home() {
                   <Title level={4}>Tracked Projects</Title>
                   <div>Welcome back, {auth.name}</div>
                   <br />
-                  <TaskSelector />
+                  <TaskSearch />
+                  <br />
+                  <br />
                   <TaskBoard />
                 </Col>
               </Row>
