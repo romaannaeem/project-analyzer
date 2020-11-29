@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { Input } from 'antd';
+import { Input, Button } from 'antd';
 import Autosuggest from 'react-autosuggest';
 
 const { Search } = Input;
@@ -11,6 +11,7 @@ export default function TaskSearch() {
   let [teams, setTeams] = useState([]);
   let [tasks, setTasks] = useState([]);
   let [value, setValue] = useState('');
+  let [selectedValue, setSelectedValue] = useState({});
   let [suggestions, setSuggestions] = useState([]);
 
   const clickupApi = axios.create({
@@ -57,15 +58,10 @@ export default function TaskSearch() {
     fetchTasks();
   }, [teams]);
 
-  const getSuggestionValue = async (suggestion) => {
-    console.log('suggestion', suggestion);
+  const getSuggestionValue = (suggestion) => {
+    setSelectedValue(suggestion);
 
-    await axios.post('/api/trackedTask', {
-      userId: auth._id,
-      taskId: suggestion.id,
-    });
-
-    window.location.href = `/`;
+    return suggestion.name;
   };
 
   const renderSuggestion = (suggestion) => <div>{suggestion.name}</div>;
@@ -82,22 +78,41 @@ export default function TaskSearch() {
     setSuggestions([]);
   };
 
+  const submitSelected = async () => {
+    if (
+      Object.keys(selectedValue).length === 0 &&
+      selectedValue.constructor === Object
+    ) {
+      return null;
+    } else {
+      await axios.post('/api/trackedTask', {
+        userId: auth._id,
+        taskId: selectedValue.id,
+      });
+
+      window.location.href = `/`;
+    }
+  };
+
   const inputProps = {
     placeholder: 'Type a task name',
     value,
     onChange: onChange,
   };
 
-  console.log(value);
-
   return (
-    <Autosuggest
-      suggestions={suggestions}
-      onSuggestionsFetchRequested={onSuggestionsFetchRequested}
-      onSuggestionsClearRequested={onSuggestionsClearRequested}
-      getSuggestionValue={getSuggestionValue}
-      renderSuggestion={renderSuggestion}
-      inputProps={inputProps}
-    />
+    <div className="autosuggest-section">
+      <Autosuggest
+        suggestions={suggestions}
+        onSuggestionsFetchRequested={onSuggestionsFetchRequested}
+        onSuggestionsClearRequested={onSuggestionsClearRequested}
+        getSuggestionValue={getSuggestionValue}
+        renderSuggestion={renderSuggestion}
+        inputProps={inputProps}
+      />
+      <Button type="primary" onClick={submitSelected}>
+        Add Task
+      </Button>
+    </div>
   );
 }
